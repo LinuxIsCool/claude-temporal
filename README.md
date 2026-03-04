@@ -1,17 +1,18 @@
 # claude-temporal
 
-Provides continuous temporal awareness to Claude by injecting timestamps at key conversation events.
+Continuous temporal awareness for Claude Code via hook-injected timestamps.
 
 ## What It Does
 
-Injects timestamps into Claude's visible context at:
+Injects timestamps at key conversation events so Claude always knows what time it is.
 
-| Event | When | Example Output |
-|-------|------|----------------|
-| `SessionStart` | Conversation begins | `[2026-03-03 08:59:25 PST] SessionStart - Monday (morning)` |
-| `UserPromptSubmit` | User sends message | `[2026-03-03 09:00:15 PST] UserPromptSubmit` |
-| `Stop` | Claude finishes response | `[2026-03-03 09:01:02 PST] Stop` |
-| `SessionEnd` | Conversation ends | `[2026-03-03 09:30:00 PST] SessionEnd` |
+| Event | Output Type | User Visible | Example |
+|-------|------------|:---:|---------|
+| `SessionStart` | systemMessage + additionalContext | yes | `Tuesday, 2026-03-03 23:07 PDT (night)` |
+| `UserPromptSubmit` | additionalContext | no | `2026-03-03 23:08 PDT` |
+| `Notification` | additionalContext | no | `2026-03-03 23:09 PDT` |
+| `Stop` | systemMessage | yes | `2026-03-03 23:10 PDT` |
+| `SessionEnd` | systemMessage | yes | `2026-03-03 23:30 PDT` |
 
 ## Why
 
@@ -25,8 +26,20 @@ With this plugin, Claude sees an **interaction timeline** throughout the convers
 ## Installation
 
 ```bash
-claude plugin add /path/to/claude-temporal
+claude plugin install /path/to/claude-temporal
 ```
+
+Or clone and install:
+
+```bash
+git clone https://github.com/LinuxIsCool/claude-temporal.git
+claude plugin install ./claude-temporal
+```
+
+## Requirements
+
+- [uv](https://docs.astral.sh/uv/) (for inline script execution)
+- Python 3.11+ (no additional dependencies)
 
 ## Context Cost
 
@@ -37,11 +50,16 @@ Each timestamp injection is ~15-20 tokens. For a typical 20-exchange session, th
 ```
 claude-temporal/
 ├── .claude-plugin/
-│   └── plugin.json          # Hook registrations (4 events)
+│   └── plugin.json          # Hook registrations (5 events)
 ├── hooks/
-│   └── inject_timestamp.py  # Timestamp injection (uv inline script)
+│   └── inject_timestamp.py  # Timestamp injection (uv inline script, 0 deps)
 ├── .gitignore
+├── LICENSE
 └── README.md
 ```
 
 No dependencies. No agents. No skills. Just hooks.
+
+## License
+
+MIT
