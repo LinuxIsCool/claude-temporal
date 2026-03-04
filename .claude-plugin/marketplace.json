@@ -1,0 +1,5 @@
+{
+  "name": "claude-temporal",
+  "owner": { "name": "LinuxIsCool" },
+  "plugins": [{ "name": "claude-temporal", "source": "./" }]
+}
