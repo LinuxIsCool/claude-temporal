@@ -1,7 +1,7 @@
 {
   "name": "temporal",
-  "version": "1.0.0",
-  "description": "Injects timestamps into Claude's context at every hook event, providing continuous temporal awareness throughout conversations.",
+  "version": "1.1.0",
+  "description": "Continuous temporal awareness via hook-injected timestamps.",
   "author": {
     "name": "linuxiscool"
   },
@@ -9,6 +9,7 @@
   "hooks": {
     "SessionStart": [{"hooks": [{"type": "command", "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/inject_timestamp.py -e SessionStart"}]}],
     "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/inject_timestamp.py -e UserPromptSubmit"}]}],
+    "Notification": [{"hooks": [{"type": "command", "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/inject_timestamp.py -e Notification"}]}],
     "Stop": [{"hooks": [{"type": "command", "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/inject_timestamp.py -e Stop"}]}],
     "SessionEnd": [{"hooks": [{"type": "command", "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/inject_timestamp.py -e SessionEnd"}]}]
   }

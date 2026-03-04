@@ -5,8 +5,8 @@
 # ///
 """Temporal plugin hook: Injects timestamps into Claude's context at key events.
 
-This hook fires on SessionStart, UserPromptSubmit, Stop, and SessionEnd,
-providing Claude with continuous temporal awareness throughout conversations.
+- SessionStart, Stop, SessionEnd → systemMessage (visible to user)
+- UserPromptSubmit, Notification → additionalContext (quiet injection for Claude)
 """
 
 import argparse
@@ -17,10 +17,9 @@ import time
 
 
 def get_temporal_context():
-    """Generate comprehensive temporal context."""
+    """Generate temporal context."""
     now = datetime.now()
 
-    # Determine period of day
     hour = now.hour
     if 5 <= hour < 12:
         period = "morning"
@@ -32,63 +31,66 @@ def get_temporal_context():
         period = "night"
 
     return {
-        "timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),
-        "time": now.strftime("%H:%M:%S"),
+        "timestamp": now.strftime("%Y-%m-%d %H:%M"),
         "date": now.strftime("%Y-%m-%d"),
         "weekday": now.strftime("%A"),
         "timezone": time.tzname[time.daylight] if time.daylight else time.tzname[0],
-        "week_number": now.isocalendar()[1],
         "period": period,
-        "hour": hour,
         "is_weekend": now.weekday() >= 5,
     }
 
 
-def format_timestamp(event: str, ctx: dict) -> str:
-    """Format timestamp for injection into Claude's context."""
+# Events where user sees the timestamp (systemMessage)
+VISIBLE_EVENTS = {"SessionStart", "Stop", "SessionEnd"}
+
+# Events where Claude gets quiet context (additionalContext)
+QUIET_EVENTS = {"UserPromptSubmit", "Notification"}
+
+
+def format_timestamp(event, ctx):
+    """Format timestamp string. No event name — Claude Code already labels it."""
     ts = ctx["timestamp"]
     tz = ctx["timezone"]
 
     if event == "SessionStart":
-        return f"[{ts} {tz}] SessionStart - {ctx['weekday']} ({ctx['period']})"
-    elif event == "SessionEnd":
-        return f"[{ts} {tz}] SessionEnd"
-    elif event == "UserPromptSubmit":
-        return f"[{ts} {tz}] UserPromptSubmit"
-    elif event == "Stop":
-        return f"[{ts} {tz}] Stop"
+        return f"{ctx['weekday']}, {ts} {tz} ({ctx['period']})"
     else:
-        return f"[{ts} {tz}] {event}"
+        return f"{ts} {tz}"
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Inject timestamp into Claude context")
-    parser.add_argument("-e", "--event", required=True, help="Hook event name")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--event", required=True)
     args = parser.parse_args()
 
-    # Read hook input from stdin
     try:
-        input_data = json.loads(sys.stdin.read() or "{}")
+        json.loads(sys.stdin.read() or "{}")
     except json.JSONDecodeError:
-        input_data = {}
+        pass
 
-    # Generate temporal context
     ctx = get_temporal_context()
-    timestamp_str = format_timestamp(args.event, ctx)
+    ts = format_timestamp(args.event, ctx)
 
-    # hookSpecificOutput only supports PreToolUse, UserPromptSubmit, PostToolUse
-    # For other events, use systemMessage instead
-    if args.event in ("PreToolUse", "UserPromptSubmit", "PostToolUse"):
+    if args.event == "SessionStart":
+        # Both: user sees it + Claude has it in context
+        output = {
+            "systemMessage": ts,
+            "hookSpecificOutput": {
+                "hookEventName": args.event,
+                "additionalContext": ts,
+            },
+        }
+    elif args.event in QUIET_EVENTS:
         output = {
             "hookSpecificOutput": {
                 "hookEventName": args.event,
-                "additionalContext": timestamp_str
+                "additionalContext": ts,
             }
         }
+    elif args.event in VISIBLE_EVENTS:
+        output = {"systemMessage": ts}
     else:
-        output = {
-            "systemMessage": timestamp_str
-        }
+        output = {"systemMessage": ts}
 
     print(json.dumps(output))
 
@@ -97,5 +99,4 @@ if __name__ == "__main__":
     try:
         main()
     except Exception:
-        # Fail silently - temporal awareness is enhancement, not critical
         pass
