@@ -6,13 +6,13 @@ Continuous temporal awareness for Claude Code via hook-injected timestamps.
 
 Injects timestamps at key conversation events so Claude always knows what time it is.
 
-| Event | Output Type | User Visible | Example |
-|-------|------------|:---:|---------|
-| `SessionStart` | systemMessage + additionalContext | yes | `Tuesday, 2026-03-03 23:07 PDT (night)` |
-| `UserPromptSubmit` | additionalContext | no | `2026-03-03 23:08 PDT` |
-| `Notification` | additionalContext | no | `2026-03-03 23:09 PDT` |
-| `Stop` | systemMessage | yes | `2026-03-03 23:10 PDT` |
-| `SessionEnd` | systemMessage | yes | `2026-03-03 23:30 PDT` |
+| Event | Output Type | User Visible | Claude Visible | Example |
+|-------|------------|:---:|:---:|---------|
+| `SessionStart` | systemMessage + additionalContext | yes | yes | `Tuesday, 2026-03-03 23:07 PDT (night)` |
+| `UserPromptSubmit` | additionalContext | no | yes | `2026-03-03 23:08 PDT` |
+| `Notification` | additionalContext | no | yes | `2026-03-03 23:09 PDT` |
+| `Stop` | systemMessage | yes | no | `2026-03-03 23:10 PDT` |
+| `SessionEnd` | systemMessage | yes | no | `2026-03-03 23:30 PDT` |
 
 ## Why
 
@@ -25,15 +25,27 @@ With this plugin, Claude sees an **interaction timeline** throughout the convers
 
 ## Installation
 
+### From GitHub
+
 ```bash
-claude plugin install /path/to/claude-temporal
+claude plugin marketplace add LinuxIsCool/claude-temporal
+claude plugin install claude-temporal@claude-temporal
 ```
 
-Or clone and install:
+### Update
+
+```bash
+claude plugin marketplace update claude-temporal
+claude plugin update claude-temporal@claude-temporal
+```
+
+### From Source
 
 ```bash
 git clone https://github.com/LinuxIsCool/claude-temporal.git
-claude plugin install ./claude-temporal
+cd claude-temporal
+claude plugin enable .          # project-specific
+claude plugin enable --global . # or system-wide
 ```
 
 ## Requirements
