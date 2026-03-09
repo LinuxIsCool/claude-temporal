@@ -53,7 +53,7 @@ def format_timestamp(event, ctx):
     tz = ctx["timezone"]
 
     if event == "SessionStart":
-        return f"{ctx['weekday']}, {ts} {tz} ({ctx['period']})"
+        return f"[temporal] {ctx['weekday']}, {ts} {tz} ({ctx['period']})"
     else:
         return f"{ts} {tz}"
 
